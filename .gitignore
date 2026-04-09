@@ -1,0 +1,15 @@
+.venv/
+__pycache__/
+*.pyc
+.DS_Store
+
+# Data artifacts
+data/raw/*.zip
+data/processed/*
+
+# Trained models
+models/*
+!models/.gitkeep
+
+# Jupyter checkpoints
+.ipynb_checkpoints/

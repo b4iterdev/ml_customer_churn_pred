@@ -1,0 +1,21 @@
+{
+  "best_model": "random_forest",
+  "selection_metric": "test_f1",
+  "metrics": {
+    "cv_best_f1": 0.6345,
+    "test_accuracy": 0.7644,
+    "test_precision": 0.5418,
+    "test_recall": 0.7273,
+    "test_f1": 0.621,
+    "test_roc_auc": 0.8404
+  },
+  "best_params": {
+    "model__max_depth": 10,
+    "model__min_samples_split": 10,
+    "model__n_estimators": 400
+  },
+  "model_path": "/Users/b4iterdev/ML_Report/models/best_model.joblib",
+  "dataset_path": "/Users/b4iterdev/ML_Report/data/raw/WA_Fn-UseC_-Telco-Customer-Churn.csv",
+  "test_size": 0.2,
+  "random_state": 42
+}
