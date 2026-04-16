@@ -1,19 +1,53 @@
 from __future__ import annotations
 
+import os
 from pathlib import Path
 
 import joblib
 import pandas as pd
+import requests
 import streamlit as st
 
 
 ROOT = Path(__file__).resolve().parents[1]
 MODEL_PATH = ROOT / "models" / "best_model.joblib"
+DEFAULT_MODEL_URL = (
+    "https://github.com/b4iterdev/ml_customer_churn_pred/releases/download/"
+    "v1.0.0/best_model.joblib"
+)
 
 
 @st.cache_resource
 def load_model(model_path: Path):
     return joblib.load(model_path)
+
+
+def ensure_model_available(model_path: Path) -> tuple[bool, str]:
+    if model_path.exists() and model_path.stat().st_size > 0:
+        return True, "Model đã sẵn sàng trên server."
+
+    model_url = os.getenv("MODEL_URL", DEFAULT_MODEL_URL)
+    model_path.parent.mkdir(parents=True, exist_ok=True)
+    temp_path = model_path.with_suffix(".joblib.tmp")
+
+    try:
+        response = requests.get(model_url, timeout=60, stream=True)
+        response.raise_for_status()
+
+        with temp_path.open("wb") as f:
+            for chunk in response.iter_content(chunk_size=8192):
+                if chunk:
+                    f.write(chunk)
+
+        if temp_path.stat().st_size == 0:
+            temp_path.unlink(missing_ok=True)
+            return False, "Tải model thất bại: file rỗng."
+
+        temp_path.replace(model_path)
+        return True, f"Đã tải model từ release: {model_url}"
+    except requests.RequestException as exc:
+        temp_path.unlink(missing_ok=True)
+        return False, f"Không thể tải model từ release: {exc}"
 
 
 def build_input_dataframe() -> pd.DataFrame:
@@ -130,12 +164,18 @@ def main() -> None:
     st.title("Telco Customer Churn Predictor")
     st.caption("Dự báo khả năng khách hàng rời bỏ dịch vụ viễn thông")
 
-    if not MODEL_PATH.exists():
-        st.error(
-            "Chưa tìm thấy model đã huấn luyện. Hãy chạy: "
-            "`PYTHONPATH=src .venv/bin/python scripts/train_models.py`"
+    with st.spinner("Đang kiểm tra model dự báo..."):
+        model_ok, model_message = ensure_model_available(MODEL_PATH)
+
+    if not model_ok:
+        st.error(model_message)
+        st.info(
+            "Bạn có thể cấu hình URL release bằng biến môi trường `MODEL_URL` "
+            "trên Streamlit Cloud."
         )
         return
+
+    st.caption(model_message)
 
     model = load_model(MODEL_PATH)
     input_df = build_input_dataframe()

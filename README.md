@@ -35,6 +35,17 @@ python3 scripts/download_dataset.py
 streamlit run app/app.py
 ```
 
+### Streamlit Cloud deployment note
+
+The app will auto-load model in this order:
+
+1. Local file: `models/best_model.joblib`
+2. If missing, auto-download from GitHub Release URL (default configured in `app/app.py`)
+
+You can override the model URL in Streamlit Cloud Secrets/Environment:
+
+- `MODEL_URL=https://github.com/<user>/<repo>/releases/download/<tag>/best_model.joblib`
+
 4. Train and compare 3 ML models, then save the best one:
 
 ```bash
